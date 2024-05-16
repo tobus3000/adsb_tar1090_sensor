@@ -1,0 +1,18 @@
+{
+    "domain": "adsb_rtl1090_sensor",
+    "name": "Home Assistant ADS-B rtl1090 Sensor",
+    "integration_type": "sensor",
+    "codeowners": ["@tobus3000"],
+    "config_flow": true,
+    "dependencies": [],
+    "documentation": "https://github.com/tobus3000/adsb_tar1090_sensor",
+    "issue_tracker": "https://github.com/tobus3000/adsb_tar1090_sensor/issues",
+    "requirements": [
+      "haversine>=2.8.1"
+    ],
+    "ssdp": [],
+    "zeroconf": [],
+    "version": "1.0.0",
+    "autoload": true
+  }
+  
