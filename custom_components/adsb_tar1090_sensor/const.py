@@ -1,5 +1,5 @@
 """Constants for the OpenAI Service integration."""
-DOMAIN = "adsb_rtl1090_sensor"
+DOMAIN = "adsb_tar1090_sensor"
 
 """Custom config parameters for this service"""
 CONF_URL = "url"

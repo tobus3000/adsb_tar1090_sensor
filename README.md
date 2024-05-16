@@ -1,4 +1,4 @@
-# Home Assistant ADSB tar1090 Sensor
+# Home Assistant ADS-B tar1090 Sensor
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
 
