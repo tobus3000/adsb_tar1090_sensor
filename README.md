@@ -21,5 +21,5 @@ Restart Home Assistant.
 
 ### Step 4 (optional)
 
-Go to "Settings" -> "Devices & services" -> click the "ADS-B tar1090 Service" integration.  
+Go to "Settings" -> "Devices & services" -> click the "ADS-B tar1090 Sensor" integration.  
 Click the "Configure" button to set the sensor up for your needs.
