@@ -2,14 +2,16 @@
 from __future__ import annotations
 import logging
 from typing import Any
-import aiohttp
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from .connection_hub import (
+    ConnectionHub,
+    CannotConnect
+)
 from .const import (
     CONF_URL,
     CONF_UPDATE_INTERVAL,
@@ -34,43 +36,11 @@ ADSB_SCHEMA = vol.Schema(
     }
 )
 
-class ConnectionHub:
-    """Connection class to verify ADS-B rtl1090 API connection."""
-
-    def __init__(self, endpoint_url) -> None:
-        """Initialize."""
-        self.url = endpoint_url
-
-    async def fetch_data(self, session):
-        """Connects to a URL and returns the JSON data."""
-        async with session.get(self.url) as response:
-            try:
-                return await response.json()
-            except Exception as exc:
-                raise InvalidEndpoint(
-                        "Connection to endpoint established but response data is not compatible."
-                    ) from exc
-
-    async def test_connect(self) -> bool:
-        """Test if we can connect to the API endpoint."""
-        try:
-            async with aiohttp.ClientSession() as session:
-                data = await self.fetch_data(session)
-                if 'aircraft' not in data.keys():
-                    raise InvalidEndpoint(
-                        "Connection to endpoint established but response data is not compatible."
-                        )
-        except Exception as exc:
-            raise CannotConnect("Failed to connect to endpoint.") from exc
-        return True
-
-
 async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user URL input."""
     hub = ConnectionHub(data.get("url"))
     if not await hub.test_connect():
         raise CannotConnect
-
     # Return info that you want to store in the config entry.
     return {}
 
@@ -173,11 +143,3 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
-
-
-# Our own exceptions
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-class InvalidEndpoint(HomeAssistantError):
-    """Error to indicate that the endpoint is not compatible with this sensor."""

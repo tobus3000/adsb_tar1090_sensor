@@ -7,7 +7,7 @@ CONF_UPDATE_INTERVAL = "update_interval"
 CONF_DISTANCE_THRESHOLD = "distance_threshold"
 CONF_EMERGENCY_SQUAWK = "emergency_squawk"
 CONF_SPECIAL_SQUAWK = "special_squawk"
-#CONF_SENSORS = "sensors"
+CONF_SENSORS = "sensors"
 
 """Default Config values"""
 DEFAULT_NAME = "hassio_adsb_rtl1090_sensor"

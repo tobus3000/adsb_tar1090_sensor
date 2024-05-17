@@ -1,3 +1,4 @@
+"""The Sensor class and definitions."""
 import logging
 import json
 import aiohttp
@@ -10,8 +11,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import (
     CONF_NAME
 )
-import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
+from .connection_hub import (
+    ConnectionHub,
+    CannotConnect
+)
 from .const import (
     DOMAIN,
     CONF_URL,
