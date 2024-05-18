@@ -66,29 +66,29 @@ class ConnectionHub:
             _LOGGER.error("Error fetching data: %s", exc)
 
 
-    async def session(self) -> aiohttp.ClientSession:
-        """Returns a aiohttp session object.
-        Either the Home Assistant one or a new ClientSession object.
+    # async def session(self) -> aiohttp.ClientSession:
+    #     """Returns a aiohttp session object.
+    #     Either the Home Assistant one or a new ClientSession object.
 
-        Returns:
-            aiohttp.ClientSession: The aiohttp session object.
-        """
-        if self.hass:
-            session = async_get_clientsession(self.hass)
-        else:
-            session = aiohttp.ClientSession(
-                connector=aiohttp.TCPConnector(
-                    limit=10,
-                    ttl_dns_cache=300
-                )
-            )
-        return session
+    #     Returns:
+    #         aiohttp.ClientSession: The aiohttp session object.
+    #     """
+    #     if self.hass:
+    #         session = async_get_clientsession(self.hass)
+    #     else:
+    #         session = aiohttp.ClientSession(
+    #             connector=aiohttp.TCPConnector(
+    #                 limit=10,
+    #                 ttl_dns_cache=300
+    #             )
+    #         )
+    #     return session
 
-    async def fetch_data(self) -> dict:
+    async def fetch_data(self, session) -> dict:
         """Connects to a URL and returns the JSON data."""
-        session = self.session()
+        # session = self.session()
         try:
-            with async_timeout.timeout(10):
+            async with aiohttp.ClientSession() as session:
                 response = await session.get(self.url)
                 response.raise_for_status()
                 return await response.json()
@@ -126,7 +126,7 @@ class ConnectionHub:
         """Test if we can connect to the API endpoint."""
         try:
             data = await self.fetch_data()
-            _LOGGER.DEBUG(f"ADS-B Data: {data}")
+            _LOGGER.debug(f"ADS-B Data: {data}")
             if 'aircraft' not in data.keys():
                 raise InvalidData(
                     "Connection to endpoint established but response data is not compatible."
