@@ -10,7 +10,7 @@ from .flight_data import FlightData
 _LOGGER = logging.getLogger(__name__)
 
 class ConnectionHub:
-    """Connection class to verify ADS-B rtl1090 API connection."""
+    """Connection class to verify ADS-B tar1090 API connection."""
 
     def __init__(self, hass, endpoint_url: str) -> None:
         """Initialize."""

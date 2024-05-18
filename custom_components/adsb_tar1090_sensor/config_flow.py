@@ -1,4 +1,4 @@
-"""Config flow for the ADS-B rtl1090 Sensor."""
+"""Config flow for the ADS-B tar1090 Sensor."""
 from __future__ import annotations
 import logging
 from typing import Any
@@ -46,7 +46,7 @@ async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for ADS-B rtl1090 Sensor."""
+    """Handle a config flow for ADS-B tar1090 Sensor."""
 
     VERSION = 1
     MINOR_VERSION = 0
@@ -97,16 +97,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Manage the options of the ADS-B rtl1090 Sensor."""
+        """Manage the options of the ADS-B tar1090 Sensor."""
 
         # Retrieve the options associated with the config entry
         options = self.config_entry.options or {}
         if user_input is not None:
             # Value of data will be set on the options property of our config_entry
             # instance.
-            _LOGGER.debug("Saving ADS-B rtl1090 Sensor options: %s", user_input)
+            _LOGGER.debug("Saving ADS-B tar1090 Sensor options: %s", user_input)
             return self.async_create_entry(
-                title="ADS-B rtl1090 Sensor Options Updated",
+                title="ADS-B tar1090 Sensor Options Updated",
                 data=user_input,
             )
 

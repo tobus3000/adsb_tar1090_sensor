@@ -39,7 +39,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     entities = []
     for sensor_name, payload_keys in SENSOR_PAYLOAD_KEYS.items():
-        entities.append(ADSBRtl1090Sensor(hass, sensor_name, rest_data, payload_keys))
+        entities.append(ADSBTar1090Sensor(hass, sensor_name, rest_data, payload_keys))
     
     if entities:
         await rest_data.async_update()
@@ -69,7 +69,7 @@ async def async_update_entities(entities):
         await asyncio.gather(*[entity.async_update() for entity in entities])
 
 
-class ADSBRtl1090Sensor(Entity):
+class ADSBTar1090Sensor(Entity):
     def __init__(self, hass, name, rest_data, payload_keys):
         self._hass = hass
         self._name = name

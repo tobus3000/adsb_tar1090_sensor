@@ -11,7 +11,7 @@ from .aircraft import Aircraft
 _LOGGER = logging.getLogger(__name__)
 
 class FlightData:
-    """Connection class to verify ADS-B rtl1090 API connection."""
+    """Connection class to verify ADS-B tar1090 API connection."""
 
     def __init__(self, adsb_data: dict) -> None:
         """Initialize."""
