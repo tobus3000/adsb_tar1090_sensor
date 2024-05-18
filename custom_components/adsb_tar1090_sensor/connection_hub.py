@@ -16,7 +16,6 @@ class ConnectionHub:
         """Initialize."""
         self.hass = hass
         self.url = endpoint_url
-        self.data = {}
 
     @property
     def url(self) -> str:
@@ -127,6 +126,7 @@ class ConnectionHub:
         """Test if we can connect to the API endpoint."""
         try:
             data = await self.fetch_data()
+            _LOGGER.DEBUG(f"ADS-B Data: {data}")
             if 'aircraft' not in data.keys():
                 raise InvalidData(
                     "Connection to endpoint established but response data is not compatible."
