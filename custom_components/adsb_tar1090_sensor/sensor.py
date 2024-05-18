@@ -92,8 +92,8 @@ class ADSBRtl1090Sensor(Entity):
     def unit_of_measurement(self):
         # Add appropriate unit of measurement based on your data
         #TODO: add last_emergency_flight_within_thold, last_emergency_flight, request_time, nearest_flight, total_flights_monitored, messages_received
-        if self._payload_key == 'temperature':
-            return '°C'
+        if self._payload_key == 'nearest_flight':
+            return 'km'
         elif self._payload_key == 'humidity':
             return '%'
         else:
