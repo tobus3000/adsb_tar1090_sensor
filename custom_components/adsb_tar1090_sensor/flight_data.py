@@ -128,6 +128,7 @@ class FlightData:
         """
         return {
             "message_count": self.message_count,
+            "monitored_flights": self.monitored_flights,
             "alerts": self.alerts
         }
 

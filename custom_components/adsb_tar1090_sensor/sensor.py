@@ -11,13 +11,11 @@ from homeassistant.const import (
     CONF_NAME
 )
 from .connection_hub import (
-    ConnectionHub,
-    CannotConnect
+    ConnectionHub
 )
 from .const import (
     DOMAIN,
-    CONF_URL,
-    CONF_SENSORS
+    CONF_URL
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,22 +28,22 @@ SCAN_INTERVAL = timedelta(minutes=5)
 #     }),
 # }, extra=vol.ALLOW_EXTRA)
 
+SENSOR_PAYLOAD_KEYS = {
+    'alert': ['squawk', 'distance', 'flight'],
+    'statistics': ['monitored_flights', 'alerts', 'message_count']
+}
 
-async def async_setup(hass, config):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     url = config[DOMAIN][CONF_URL]
-    sensors = config[DOMAIN][CONF_SENSORS]
-    
     rest_data = ConnectionHub(hass, url)
 
     entities = []
-    for sensor_name, payload_key in sensors.items():
-        entities.append(ADSBRtl1090Sensor(hass, sensor_name, rest_data, payload_key))
-
+    for sensor_name, payload_keys in SENSOR_PAYLOAD_KEYS.items():
+        entities.append(ADSBRtl1090Sensor(hass, sensor_name, rest_data, payload_keys))
+    
     if entities:
-        hass.async_create_task(rest_data.async_update())
-        hass.async_create_task(async_update_entities(entities))
-
-    return True
+        await rest_data.async_update()
+        async_add_entities(entities)
 
 
 async def async_update_entities(entities):
@@ -72,12 +70,12 @@ async def async_update_entities(entities):
 
 
 class ADSBRtl1090Sensor(Entity):
-    def __init__(self, hass, name, rest_data, payload_key):
+    def __init__(self, hass, name, rest_data, payload_keys):
         self._hass = hass
         self._name = name
         self._rest_data = rest_data
-        self._payload_key = payload_key
-        self._state = None
+        self._payload_keys = payload_keys
+        self._state = {key: None for key in payload_keys}
 
     @property
     def name(self):
@@ -87,20 +85,21 @@ class ADSBRtl1090Sensor(Entity):
     def state(self):
         return self._state
 
-    @property
-    def unit_of_measurement(self):
-        # Add appropriate unit of measurement based on your data
-        #TODO: add last_emergency_flight_within_thold, last_emergency_flight, request_time, nearest_flight, total_flights_monitored, messages_received
-        if self._payload_key == 'nearest_flight':
-            return 'km'
-        elif self._payload_key == 'humidity':
-            return '%'
-        else:
-            return None
+    # @property
+    # def unit_of_measurement(self):
+    #     # Add appropriate unit of measurement based on your data
+    #     #TODO: add last_emergency_flight_within_thold, last_emergency_flight, request_time, nearest_flight, total_flights_monitored, messages_received
+    #     if self._payload_key == 'nearest_flight':
+    #         return 'km'
+    #     elif self._payload_key == 'humidity':
+    #         return '%'
+    #     else:
+    #         return None
 
     async def async_update(self):
         await self._rest_data.async_update()
         data = self._rest_data.data
         if data:
-            self._state = data.get(self._payload_key)
-
+            for key in self._payload_keys:
+                if key in data:
+                    self._state[key] = data[key]

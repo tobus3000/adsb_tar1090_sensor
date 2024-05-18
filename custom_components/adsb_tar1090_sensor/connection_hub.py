@@ -6,6 +6,7 @@ import aiohttp
 import async_timeout
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from .flight_data import FlightData
 _LOGGER = logging.getLogger(__name__)
 
 class ConnectionHub:
@@ -51,7 +52,8 @@ class ConnectionHub:
         Args:
             response_data (dict): The response JSON data dictionary.
         """
-        self._data = response_data
+        flight_data = FlightData(response_data)
+        self._data = flight_data.output_data()
 
     async def async_update(self):
         """The update method that gets called by Home Assistant to refresh the data. """
