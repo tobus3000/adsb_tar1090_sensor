@@ -84,9 +84,8 @@ class ConnectionHub:
     #         )
     #     return session
 
-    async def fetch_data(self, session) -> dict:
+    async def fetch_data(self) -> dict:
         """Connects to a URL and returns the JSON data."""
-        # session = self.session()
         try:
             async with aiohttp.ClientSession() as session:
                 response = await session.get(self.url)
