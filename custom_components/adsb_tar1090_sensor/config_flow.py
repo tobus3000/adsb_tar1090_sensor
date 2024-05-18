@@ -18,10 +18,8 @@ from .const import (
     CONF_DISTANCE_THRESHOLD,
     CONF_EMERGENCY_SQUAWK,
     CONF_SPECIAL_SQUAWK,
-    DEFAULT_NAME,
     DEFAULT_UPDATE_INTERVAL_SECONDS,
     DEFAULT_DISTANCE_THRESHOLD_KM,
-    DEFAULT_URL,
     DEFAULT_EMERGENCY_SQUAWK,
     DEFAULT_SPECIAL_SQUAWK,
     DOMAIN,
@@ -31,16 +29,18 @@ _LOGGER = logging.getLogger(__name__)
 
 ADSB_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_URL, default=DEFAULT_URL): cv.string
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_URL): cv.string
     }
 )
 
 async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user URL input."""
-    hub = ConnectionHub(endpoint_url=data.get("url"))
-    if not await hub.test_connect():
-        raise CannotConnect
+    url = data.get("url")
+    if url:
+        hub = ConnectionHub(hass=None, endpoint_url=url)
+        if not await hub.test_connect():
+            raise CannotConnect
     # Return info that you want to store in the config entry.
     return {}
 
@@ -50,6 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 0
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -67,11 +68,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             else:
                 user_input.update(info)
                 return self.async_create_entry(
-                    title=user_input["name"], data=user_input
+                    title=user_input[CONF_NAME], data=user_input
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=ADSB_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=ADSB_SCHEMA,
+            errors=errors
         )
 
 

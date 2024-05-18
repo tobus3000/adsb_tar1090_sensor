@@ -11,11 +11,11 @@ _LOGGER = logging.getLogger(__name__)
 class ConnectionHub:
     """Connection class to verify ADS-B rtl1090 API connection."""
 
-    def __init__(self, hass=None, endpoint_url=None) -> None:
+    def __init__(self, hass, endpoint_url: str) -> None:
         """Initialize."""
         self.hass = hass
         self.url = endpoint_url
-        self.data = None
+        self.data = {}
 
     @property
     def url(self) -> str:

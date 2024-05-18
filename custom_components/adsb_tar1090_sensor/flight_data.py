@@ -7,7 +7,7 @@ from __future__ import annotations
 import logging
 import haversine
 from homeassistant.exceptions import HomeAssistantError
-from .squawk_codes import SQUAWK_CODES
+from .aircraft import Aircraft
 _LOGGER = logging.getLogger(__name__)
 
 class FlightData:
@@ -17,6 +17,7 @@ class FlightData:
         """Initialize."""
         self.message_count = 0
         self.monitored_flights = 0
+        self.alerts = 0
         self.adsb_data = adsb_data
 
     @property
@@ -26,7 +27,7 @@ class FlightData:
     @adsb_data.setter
     def adsb_data(self, data: dict):
         self._adsb_data = data
-        self.parse_adsb_data()        
+        self.parse_adsb_data()
 
     @property
     def message_count(self) -> int:
@@ -39,10 +40,9 @@ class FlightData:
 
     @message_count.setter
     def message_count(self, count: int):
-        if isinstance(count, int):
-            self._message_count = count
-        else:
-            self._message_count = 0
+        if not isinstance(count, int):
+            count = 0
+        self._message_count = count
 
     @property
     def monitored_flights(self) -> int:
@@ -55,10 +55,29 @@ class FlightData:
 
     @monitored_flights.setter
     def monitored_flights(self, count: int):
-        if isinstance(count, int):
-            self._monitored_flights = count
-        else:
-            self._monitored_flights = 0
+        if not isinstance(count, int):
+            count = 0
+        self._monitored_flights = count
+
+    @property
+    def alerts(self) -> int:
+        """Returns the amount of currently tracked alerts.
+
+        Returns:
+            int: Current alert count
+        """
+        return self._alerts
+    
+    @alerts.setter
+    def alerts(self, count: int):
+        """Set the current alert count.
+
+        Args:
+            count (int): The current alert count
+        """
+        if not isinstance(count, int):
+            count = 0
+        self._alerts = count
 
     def parse_adsb_data(self):
         """Parses and processes the local ADS-B data.
@@ -79,21 +98,24 @@ class FlightData:
         aircrafts = self.adsb_data.get("aircraft")
         if aircrafts:
             self.monitored_flights = len(aircrafts)
-            for aircraft in aircrafts:
-                squawk = aircraft.get("squawk")
-                # skip record when no SQUAWK code is set.
-                if not squawk:
-                    continue
-                flight = aircraft.get("flight")
-                # skip record when no flight number is set.
-                if not flight:
-                    continue
-                # get latitude & longitude
-                lat = aircraft.get("lat")
-                lon = aircraft.get("lon")
-                # skip if no location data is present.
-                if not lat or not lon:
-                    continue
+            for aircraft_data in aircrafts:
+                data = Aircraft(aircraft_data)
+                if data.emergency:
+                    self.alerts=self.alerts + 1
+                # squawk = aircraft.get("squawk")
+                # # skip record when no SQUAWK code is set.
+                # if not squawk:
+                #     continue
+                # flight = aircraft.get("flight")
+                # # skip record when no flight number is set.
+                # if not flight:
+                #     continue
+                # # get latitude & longitude
+                # lat = aircraft.get("lat")
+                # lon = aircraft.get("lon")
+                # # skip if no location data is present.
+                # if not lat or not lon:
+                #     continue
                 
         else:
             raise DataParserError("Failed to parse the aircraft data.")
@@ -105,7 +127,8 @@ class FlightData:
             dict: Sensor data for further processing.
         """
         return {
-            "message_count": self.message_count
+            "message_count": self.message_count,
+            "alerts": self.alerts
         }
 
     @staticmethod

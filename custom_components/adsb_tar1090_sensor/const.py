@@ -9,9 +9,8 @@ CONF_EMERGENCY_SQUAWK = "emergency_squawk"
 CONF_SPECIAL_SQUAWK = "special_squawk"
 CONF_SENSORS = "sensors"
 
-"""Default Config values"""
-DEFAULT_NAME = "hassio_adsb_rtl1090_sensor"
-DEFAULT_URL = "http://adsbexchange.local/tar1090/data/aircraft.json"
+#"""Default Config values"""
+#DEFAULT_URL = str("http://adsbexchange.local/tar1090/data/aircraft.json")
 
 """Default Option values"""
 DEFAULT_UPDATE_INTERVAL_SECONDS = 60

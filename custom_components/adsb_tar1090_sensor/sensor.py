@@ -49,8 +49,7 @@ async def async_setup(hass, config):
 
 
 async def async_update_entities(entities):
-    """
-    Asynchronously updates the state of multiple entities at specified intervals.
+    """Asynchronously updates the state of multiple entities at specified intervals.
 
     This function iterates indefinitely, updating the state of each entity in the provided list
     at intervals determined by the SCAN_INTERVAL constant.
