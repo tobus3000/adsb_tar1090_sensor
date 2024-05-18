@@ -7,7 +7,6 @@ import async_timeout
 
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import (
     CONF_NAME
 )
@@ -35,9 +34,8 @@ SCAN_INTERVAL = timedelta(minutes=5)
 async def async_setup(hass, config):
     url = config[DOMAIN][CONF_URL]
     sensors = config[DOMAIN][CONF_SENSORS]
-    session = async_get_clientsession(hass)
-
-    rest_data = ReceiverData(hass, session, url)
+    
+    rest_data = ConnectionHub(hass, url)
 
     entities = []
     for sensor_name, payload_key in sensors.items():
@@ -51,6 +49,24 @@ async def async_setup(hass, config):
 
 
 async def async_update_entities(entities):
+    """
+    Asynchronously updates the state of multiple entities at specified intervals.
+
+    This function iterates indefinitely, updating the state of each entity in the provided list
+    at intervals determined by the SCAN_INTERVAL constant.
+
+    Parameters:
+        entities (list of Entity): A list of Entity objects whose state needs to be updated.
+
+    Returns:
+        None
+
+    Notes:
+        - The function indefinitely iterates using a while loop, sleeping for the duration 
+          specified by SCAN_INTERVAL between updates.
+        - Upon each iteration, it concurrently updates the state of all entities in the list
+          using asyncio.gather(), ensuring that the updates are performed efficiently in parallel.
+    """
     while True:
         await asyncio.sleep(SCAN_INTERVAL.total_seconds())
         await asyncio.gather(*[entity.async_update() for entity in entities])
@@ -89,23 +105,3 @@ class ADSBRtl1090Sensor(Entity):
         if data:
             self._state = data.get(self._payload_key)
 
-
-class ReceiverData:
-    def __init__(self, hass, session, url):
-        self._hass = hass
-        self._session = session
-        self._url = url
-        self._data = {}
-
-    @property
-    def data(self):
-        return self._data
-
-    async def async_update(self):
-        try:
-            with async_timeout.timeout(10):
-                response = await self._session.get(self._url)
-                response.raise_for_status()
-                self._data = await response.json()
-        except (asyncio.TimeoutError, aiohttp.ClientError) as ex:
-            _LOGGER.error("Error fetching data: %s", ex)

@@ -3,41 +3,132 @@ from __future__ import annotations
 import logging
 import asyncio
 import aiohttp
+import async_timeout
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 _LOGGER = logging.getLogger(__name__)
 
 class ConnectionHub:
     """Connection class to verify ADS-B rtl1090 API connection."""
 
-    def __init__(self, endpoint_url) -> None:
+    def __init__(self, hass=None, endpoint_url=None) -> None:
         """Initialize."""
+        self.hass = hass
         self.url = endpoint_url
+        self.data = None
 
-    async def fetch_data(self, session):
-        """Connects to a URL and returns the JSON data."""
-        async with session.get(self.url) as response:
-            try:
-                response.raise_for_status()
-                return await response.json()
-            except Exception as exc:
-                raise InvalidEndpoint(
-                        "Connection to endpoint established but response data is not compatible."
-                    ) from exc
+    @property
+    def url(self) -> str:
+        """Returns the endpoint URL.
 
-    async def test_connect(self) -> bool:
-        """Test if we can connect to the API endpoint."""
+        Returns:
+            str: Endpoint URL
+        """
+        return self._url
+
+    @url.setter
+    def url(self, endpoint_url: str):
+        """Stores the endpoint URL.
+
+        Args:
+            endpoint_url (str): The URL to the HTTP(s) endpoint.
+        """
+        self._url = endpoint_url
+
+    @property
+    def data(self) -> dict:
+        """Returns the http response data as dictionary.
+
+        Returns:
+            dict: HTTP response data dictionary.
+        """
+        return self._data
+
+    @data.setter
+    def data(self, response_data: dict):
+        """Stores the JSON data from a http(s) response.
+
+        Args:
+            response_data (dict): The response JSON data dictionary.
+        """
+        self._data = response_data
+
+    async def async_update(self):
+        """The update method that gets called by Home Assistant to refresh the data. """
         try:
-            async with aiohttp.ClientSession(
+            self.data = await self.fetch_data()
+        except (
+            CannotConnect,
+            InvalidData,
+            GeneralProblem
+         ) as exc:
+            _LOGGER.error("Error fetching data: %s", exc)
+
+
+    async def session(self) -> aiohttp.ClientSession:
+        """Returns a aiohttp session object.
+        Either the Home Assistant one or a new ClientSession object.
+
+        Returns:
+            aiohttp.ClientSession: The aiohttp session object.
+        """
+        if self.hass:
+            session = async_get_clientsession(self.hass)
+        else:
+            session = aiohttp.ClientSession(
                 connector=aiohttp.TCPConnector(
                     limit=10,
                     ttl_dns_cache=300
                 )
-            ) as session:
-                data = await self.fetch_data(session)
-                if 'aircraft' not in data.keys():
-                    raise InvalidEndpoint(
-                        "Connection to endpoint established but response data is not compatible."
-                        )
+            )
+        return session
+
+    async def fetch_data(self) -> dict:
+        """Connects to a URL and returns the JSON data."""
+        session = self.session()
+        try:
+            with async_timeout.timeout(10):
+                response = await session.get(self.url)
+                response.raise_for_status()
+                return await response.json()
+        except (
+            asyncio.TimeoutError,
+            aiohttp.ClientConnectionError,
+            aiohttp.ClientSSLError,
+            aiohttp.ClientConnectorSSLError,
+            aiohttp.ServerConnectionError,
+            aiohttp.ServerTimeoutError
+        ) as exc:
+            _LOGGER.error("Error connecting to ADS-B receiver endpoint: %s", exc)
+            raise CannotConnect(
+                "Cannot establish connection."
+            ) from exc
+        except (
+            aiohttp.ClientPayloadError,
+            aiohttp.ContentTypeError,
+            aiohttp.ClientResponseError
+        ) as exc:
+            _LOGGER.error("Problem with the payload from the ADS-B receiver endpoint: %s", exc)
+            raise InvalidData(
+                "There is a problem with the payload."
+            ) from exc
+        except (
+            Exception,
+            aiohttp.ClientError
+            ) as exc:
+            _LOGGER.error("General error connecting to ADS-B receiver endpoint: %s", exc)
+            raise GeneralProblem(
+                    "General error connecting to ADS-B receiver endpoint"
+                ) from exc
+
+    async def test_connect(self) -> bool:
+        """Test if we can connect to the API endpoint."""
+        try:
+            data = await self.fetch_data()
+            if 'aircraft' not in data.keys():
+                raise InvalidData(
+                    "Connection to endpoint established but response data is not compatible."
+                    )
         except Exception as exc:
             raise CannotConnect("Failed to connect to endpoint.") from exc
         # Graceful shutdown
@@ -47,5 +138,8 @@ class ConnectionHub:
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
-class InvalidEndpoint(HomeAssistantError):
+class InvalidData(HomeAssistantError):
+    """Error when the response of a GET request is not what we expect."""
+
+class GeneralProblem(HomeAssistantError):
     """Error to indicate that the endpoint is not compatible with this sensor."""

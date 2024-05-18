@@ -38,7 +38,7 @@ ADSB_SCHEMA = vol.Schema(
 
 async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user URL input."""
-    hub = ConnectionHub(data.get("url"))
+    hub = ConnectionHub(endpoint_url=data.get("url"))
     if not await hub.test_connect():
         raise CannotConnect
     # Return info that you want to store in the config entry.
