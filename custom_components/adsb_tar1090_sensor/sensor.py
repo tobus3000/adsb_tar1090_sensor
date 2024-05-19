@@ -14,18 +14,15 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=5)
-SENSOR_PAYLOAD_KEYS = {
-    #'alert': ['squawk', 'distance', 'flight'],
-    'statistics': [
-        'monitored_flights',
-        'nearest_flight',
-        'nearest_flight_distance',
-        'nearest_flight_altitude',
-        'nearest_flight_speed',
-        'message_count',
-        'emergencies'
-    ]
-}
+SENSOR_PAYLOAD_KEYS = [
+    'monitored_flights',
+    'nearest_flight',
+    'nearest_flight_distance',
+    'nearest_flight_altitude',
+    'nearest_flight_speed',
+    'message_count',
+    'emergencies'
+]
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -43,8 +40,8 @@ async def async_setup_entry(
     url = config[CONF_URL]
     session = ConnectionHub(hass, url)
     sensors = []
-    for sensor_name, payload_keys in SENSOR_PAYLOAD_KEYS.items():
-        sensors.append(ADSBTar1090Sensor(hass, sensor_name, session, payload_keys))
+    for sensor_name in SENSOR_PAYLOAD_KEYS:
+        sensors.append(ADSBTar1090Sensor(hass, sensor_name, session))
     async_add_entities(sensors, update_before_add=True)
 
 # async def async_setup_platform(
@@ -97,8 +94,7 @@ class ADSBTar1090Sensor(Entity):
         self,
         hass: HomeAssistant,
         name: str,
-        rest_data: ConnectionHub,
-        payload_keys: List[str]
+        rest_data: ConnectionHub
     ) -> None:
         """Initialize the ADS-B sensor.
 
@@ -111,8 +107,7 @@ class ADSBTar1090Sensor(Entity):
         self._hass = hass
         self._name = name
         self._rest_data = rest_data
-        self._payload_keys = payload_keys
-        self._state = {key: None for key in payload_keys}
+        self._state = {key: None for key in SENSOR_PAYLOAD_KEYS}
 
     @property
     def name(self):
@@ -130,6 +125,6 @@ class ADSBTar1090Sensor(Entity):
         await self._rest_data.async_update()
         data = self._rest_data.data
         if data:
-            for key in self._payload_keys:
+            for key in SENSOR_PAYLOAD_KEYS:
                 if key in data:
                     self._state[key] = data[key]
