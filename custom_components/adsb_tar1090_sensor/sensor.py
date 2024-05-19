@@ -3,7 +3,15 @@ import logging
 from typing import Any, Dict, List, Optional
 import asyncio
 from datetime import timedelta
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    EntityCategory
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from .utils import generate_entity_id
@@ -92,8 +100,11 @@ async def async_update_entities(entities: list):
         await asyncio.gather(*[entity.async_update() for entity in entities])
 
 
-class ADSBTar1090Sensor(Entity):
+class ADSBTar1090Sensor(SensorEntity):
     """Representation of a sensor for ADS-B data retrieved from tar1090 API."""
+    _attr_entity_category = (
+        EntityCategory.DIAGNOSTIC
+    )
     def __init__(
         self,
         hass: HomeAssistant,
@@ -111,7 +122,7 @@ class ADSBTar1090Sensor(Entity):
         """
         self._hass = hass
         self._name = name
-        self.entity_id = generate_entity_id(DOMAIN, name)
+        self._attr_unique_id = generate_entity_id(DOMAIN, name)
         self._rest_data = rest_data
         self._payload_keys = payload_keys
         self._state = {key: None for key in payload_keys}
