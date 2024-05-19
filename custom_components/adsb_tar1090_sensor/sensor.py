@@ -10,7 +10,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    EntityCategory
+    EntityCategory,
+    CONF_NAME
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -49,11 +50,20 @@ async def async_setup_entry(
         async_add_entities (_type_): _description_
     """
     config = hass.data[DOMAIN][config_entry.entry_id]
+    integration_name = config[CONF_NAME]
     url = config[CONF_URL]
     session = ConnectionHub(hass, url)
     sensors = []
     for sensor_name, payload_keys in SENSOR_PAYLOAD_KEYS.items():
-        sensors.append(ADSBTar1090Sensor(hass, sensor_name, session, payload_keys))
+        sensors.append(
+            ADSBTar1090Sensor(
+                hass,
+                integration_name,
+                sensor_name,
+                session,
+                payload_keys
+            )
+        )
     async_add_entities(sensors, update_before_add=True)
 
 # async def async_setup_platform(
@@ -108,6 +118,7 @@ class ADSBTar1090Sensor(SensorEntity):
     def __init__(
         self,
         hass: HomeAssistant,
+        integration_name: str,
         name: str,
         rest_data: ConnectionHub,
         payload_keys: List[str]
@@ -122,7 +133,7 @@ class ADSBTar1090Sensor(SensorEntity):
         """
         self._hass = hass
         self._name = name
-        self._attr_unique_id = generate_entity_id(DOMAIN, name)
+        self._attr_unique_id = generate_entity_id(DOMAIN, integration_name, name)
         self._rest_data = rest_data
         self._payload_keys = payload_keys
         self._state = {key: None for key in payload_keys}
