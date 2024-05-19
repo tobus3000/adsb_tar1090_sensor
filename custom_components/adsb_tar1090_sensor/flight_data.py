@@ -14,7 +14,11 @@ class FlightData:
     """Connection class to verify ADS-B tar1090 API connection."""
 
     def __init__(self, adsb_data: dict) -> None:
-        """Initialize."""
+        """Initialize the FlightData class.
+
+        Args:
+            adsb_data (dict): The `aircraft.json` response data.
+        """
         self.message_count = 0
         self.monitored_flights = 0
         self.alerts = 0
@@ -22,6 +26,11 @@ class FlightData:
 
     @property
     def adsb_data(self) -> dict:
+        """Returns the `aircraft.json` response data.
+
+        Returns:
+            dict: The `aircraft.json` response data.
+        """
         return self._adsb_data
 
     @adsb_data.setter
@@ -67,7 +76,7 @@ class FlightData:
             int: Current alert count
         """
         return self._alerts
-    
+
     @alerts.setter
     def alerts(self, count: int):
         """Set the current alert count.
@@ -116,12 +125,15 @@ class FlightData:
                 # # skip if no location data is present.
                 # if not lat or not lon:
                 #     continue
-                
+
         else:
             raise DataParserError("Failed to parse the aircraft data.")
 
     def output_data(self) -> dict:
         """Returns the output data required by the Home Assistant ADS-B Sensor.
+
+        #TODO: add last_emergency_flight_within_thold, last_emergency_flight, request_time,
+        # nearest_flight, total_flights_monitored, messages_received
 
         Returns:
             dict: Sensor data for further processing.

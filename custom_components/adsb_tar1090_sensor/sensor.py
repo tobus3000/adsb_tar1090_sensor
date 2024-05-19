@@ -2,23 +2,16 @@
 import logging
 from typing import Any, Dict, List, Optional, Callable
 import asyncio
-
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import HomeAssistant
-from homeassistant.const import (
-    CONF_NAME
-)
-from .connection_hub import (
-    ConnectionHub
-)
+from .connection_hub import ConnectionHub
 from .const import (
-    DOMAIN,
-    CONF_URL
+    CONF_URL,
+    DOMAIN
 )
 
 _LOGGER = logging.getLogger(__name__)
-
 SCAN_INTERVAL = timedelta(minutes=5)
 SENSOR_PAYLOAD_KEYS = {
     'alert': ['squawk', 'distance', 'flight'],
@@ -41,6 +34,8 @@ async def async_setup_platform(
         async_add_entities (Callable[[List[Entity], bool]): A function to add entities to HA.
         discovery_info (Optional[Dict[str, Any]]): Optional discovery information. Defaults to None.
     """
+    if discovery_info is None:
+        _LOGGER.debug("No discovery info available.")
     url = config[DOMAIN][CONF_URL]
     rest_data = ConnectionHub(hass, url)
 
@@ -100,19 +95,9 @@ class ADSBTar1090Sensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    # @property
-    # def unit_of_measurement(self):
-    #     # Add appropriate unit of measurement based on your data
-    #     #TODO: add last_emergency_flight_within_thold, last_emergency_flight, request_time, nearest_flight, total_flights_monitored, messages_received
-    #     if self._payload_key == 'nearest_flight':
-    #         return 'km'
-    #     elif self._payload_key == 'humidity':
-    #         return '%'
-    #     else:
-    #         return None
-
     async def async_update(self):
         """Update the sensor state."""
+        _LOGGER.debug("ADS-B tar1090 Sensor: Updating Sensors.")
         await self._rest_data.async_update()
         data = self._rest_data.data
         if data:
