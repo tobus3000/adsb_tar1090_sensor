@@ -64,26 +64,7 @@ class ConnectionHub:
             GeneralProblem
          ) as exc:
             _LOGGER.error("Error fetching data: %s", exc)
-
-
-    # async def session(self) -> aiohttp.ClientSession:
-    #     """Returns a aiohttp session object.
-    #     Either the Home Assistant one or a new ClientSession object.
-
-    #     Returns:
-    #         aiohttp.ClientSession: The aiohttp session object.
-    #     """
-    #     if self.hass:
-    #         session = async_get_clientsession(self.hass)
-    #     else:
-    #         session = aiohttp.ClientSession(
-    #             connector=aiohttp.TCPConnector(
-    #                 limit=10,
-    #                 ttl_dns_cache=300
-    #             )
-    #         )
-    #     return session
-
+    
     async def fetch_data(self) -> dict:
         """Connects to a URL and returns the JSON data."""
         try:
