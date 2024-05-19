@@ -90,7 +90,7 @@ class FlightManager:
         the flight and your position.
         """
         for flight in self.get_all_flights():
-            if flight.location:
+            if flight.location and self.location:
                 distance = FlightManager.haversine_distance(self.location, flight.location)
                 if distance and isinstance(distance, float):
                     self.distances[flight.flight_number] = distance
@@ -187,7 +187,7 @@ class FlightManager:
         distance_km = haversine.haversine(coord1, coord2)
         return round(distance_km,2)
 
-    def get_location(self) -> tuple:
+    def get_location(self) -> tuple | None:
         """Retrieve the latitude and longitude of the Home Assistant installation.
 
         This function asynchronously fetches the latitude and longitude attributes 
@@ -195,8 +195,8 @@ class FlightManager:
         Home Assistant installation.
 
         Returns:
-            tuple: A tuple containing the latitude and longitude of the Home Assistant 
-            installation. If the location is not available, (None, None) is returned.
+            tuple | None: A tuple containing the latitude and longitude of the Home Assistant 
+            installation. If the location is not available, None is returned.
         """
         states = self.hass.states.async_all()
         latitude = next(
@@ -215,7 +215,10 @@ class FlightManager:
             ),
             None
         )
-        return (latitude, longitude)
+        if latitude and longitude:
+            return (latitude, longitude)
+        else:
+            return None
 
 class DataParserError(HomeAssistantError):
     """Error to indicate that data could not be parsed."""
