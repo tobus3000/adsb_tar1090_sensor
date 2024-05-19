@@ -4,9 +4,7 @@ based on the information received from the ADS-B receiver.
 
 """
 from __future__ import annotations
-import logging
 from .squawk_codes import SQUAWK_CODES
-_LOGGER = logging.getLogger(__name__)
 
 class Aircraft:
     """Holds details of currently monitored aircraft."""

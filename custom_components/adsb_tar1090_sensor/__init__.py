@@ -1,12 +1,11 @@
 """The ADS-B tar1090 Sensor integration."""
 from __future__ import annotations
+import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import (
     HomeAssistant
 )
 from .const import DOMAIN
-import logging
-
 _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

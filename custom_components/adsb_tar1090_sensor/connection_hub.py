@@ -3,9 +3,8 @@ from __future__ import annotations
 import logging
 import asyncio
 import aiohttp
-import async_timeout
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+#from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .flight_data import FlightData
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ class ConnectionHub:
             GeneralProblem
          ) as exc:
             _LOGGER.error("Error fetching data: %s", exc)
-    
+
     async def fetch_data(self) -> dict:
         """Connects to a URL and returns the JSON data."""
         try:
@@ -106,7 +105,7 @@ class ConnectionHub:
         """Test if we can connect to the API endpoint."""
         try:
             data = await self.fetch_data()
-            _LOGGER.debug(f"ADS-B Data: {data}")
+            _LOGGER.debug("ADS-B Data: %s", data)
             if 'aircraft' not in data.keys():
                 raise InvalidData(
                     "Connection to endpoint established but response data is not compatible."

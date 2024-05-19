@@ -4,11 +4,9 @@ based on the information received from the ADS-B receiver.
 
 """
 from __future__ import annotations
-import logging
 import haversine
 from homeassistant.exceptions import HomeAssistantError
 from .aircraft import Aircraft
-_LOGGER = logging.getLogger(__name__)
 
 class FlightData:
     """Connection class to verify ADS-B tar1090 API connection."""
