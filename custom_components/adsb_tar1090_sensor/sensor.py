@@ -19,6 +19,9 @@ SENSOR_PAYLOAD_KEYS = {
     'statistics': [
         'monitored_flights',
         'nearest_flight',
+        'nearest_flight_distance',
+        'nearest_flight_altitude',
+        'nearest_flight_speed',
         'message_count',
         'emergencies'
     ]

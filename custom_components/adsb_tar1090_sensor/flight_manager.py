@@ -151,6 +151,19 @@ class FlightManager:
         """
         return list(self.active_flights.values())
 
+    def get_nearest_flight(self) -> tuple | None:
+        """Find the nearest flight and return a tuple of flight number and distance in km.
+
+        Returns:
+            tuple | None: Tuple of flight number and distance or None if no flights..
+        """
+        nearest_flight_number = min(self.distances.values(), default=None)
+        if nearest_flight_number:
+            nearest_flight_distance = self.distances[nearest_flight_number]
+            return (nearest_flight_number, nearest_flight_distance)
+        else:
+            return None
+
     def output_data(self) -> dict:
         """Returns the output data required by the Home Assistant ADS-B Sensor.
 
@@ -160,11 +173,29 @@ class FlightManager:
         Returns:
             dict: Sensor data for further processing.
         """
+        nearest_flight_data = self.get_nearest_flight()
+        if nearest_flight_data:
+            (nearest_flight, nearest_flight_distance) = nearest_flight_data
+            flight = self.get_flight(nearest_flight)
+            if flight:
+                (nearest_flight_speed, nearest_flight_altitude) = flight.parameters
+            else:
+                nearest_flight_speed = None
+                nearest_flight_altitude = None
+        else:
+            nearest_flight = None
+            nearest_flight_distance = None
+            nearest_flight_speed = None
+            nearest_flight_altitude = None
+
         return {
             "message_count": self.message_count,
             "monitored_flights": len(self.active_flights),
             "emergencies": len(self.emergencies),
-            "nearest_flight": min(self.distances.values())
+            "nearest_flight": nearest_flight,
+            "nearest_flight_distance": nearest_flight_distance,
+            "nearest_flight_altitude": nearest_flight_altitude,
+            "nearest_flight_speed": nearest_flight_speed
         }
 
     @staticmethod
