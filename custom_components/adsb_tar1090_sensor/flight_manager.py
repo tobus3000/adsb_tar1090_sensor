@@ -4,6 +4,7 @@ on the information received from the ADS-B receiver.
 
 """
 from __future__ import annotations
+import logger
 import haversine
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -12,6 +13,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from .flight import Flight
+_LOGGER = logging.getLogger(__name__)
 
 class FlightManager:
     """Connection class to verify ADS-B tar1090 API connection."""
@@ -28,6 +30,7 @@ class FlightManager:
         self.active_flights = {}
         self.adsb_data = adsb_data
         self.distances = {}
+        self.emergencies = {}
 
     @property
     def adsb_data(self) -> dict:
@@ -67,6 +70,7 @@ class FlightManager:
         self.message_count = self.adsb_data.get('messages',0)
         self.extract_flight_data()
         self.calculate_distances()
+        self.analyze_squawk()
 
     def extract_flight_data(self):
         """Extract the aircraft data from the ADS-B data.
@@ -90,6 +94,23 @@ class FlightManager:
                 distance = FlightManager.haversine_distance(self.location, flight.location)
                 if distance and isinstance(distance, float):
                     self.distances[flight.flight_number] = distance
+
+    def analyze_squawk(self):
+        """Iterates over all current flights and searches for flights with an emergency
+        transponder code set.
+        """
+        for flight in self.get_all_flights():
+            if flight.squawk:
+                (code, description) = flight.squawk
+                #TODO: get emergency squawk from configuration.
+                if code in [7500,7600,7700]:
+                    _LOGGER.debug(
+                        "Flight %s has set emergency squawk code %s - %s!",
+                        flight.flight_number,
+                        code,
+                        description
+                    )
+                    self.emergencies[flight.flight_number] = flight.squawk
 
     def add_flight(self, flight_number: str, flight_data: dict) -> None:
         """Adds a Flight object to the list of active flights.
@@ -142,6 +163,7 @@ class FlightManager:
         return {
             "message_count": self.message_count,
             "monitored_flights": len(self.active_flights),
+            "emergencies": len(self.emergencies),
             "nearest_flight": min(self.distances.values())
         }
 

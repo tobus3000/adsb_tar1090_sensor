@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 import asyncio
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from .connection_hub import ConnectionHub
 from .const import (
@@ -15,37 +16,62 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=5)
 SENSOR_PAYLOAD_KEYS = {
     #'alert': ['squawk', 'distance', 'flight'],
-    'statistics': ['monitored_flights', 'nearest_flight', 'message_count']
+    'statistics': [
+        'monitored_flights',
+        'nearest_flight',
+        'message_count',
+        'emergencies'
+    ]
 }
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: Dict[str, Any],
-    async_add_entities,
-    discovery_info: Optional[Dict[str, Any]] = None
-) -> None:
-    """Set up the sensor platform for the custom component.
-    This function is responsible for setting up the sensor platform within the custom component.
-    Called when Home Assistant discovers and initializes the sensor platform based on configuration.
+    config_entry: ConfigEntry,
+    async_add_entities
+):
+    """Setup sensors from a config entry created in the integration UI.
 
     Args:
-        hass (HomeAssistant): The Home Assistant core instance.
-        config (Dict[str, Any]): The configuration for the sensor platform.
-        async_add_entities (Callable[[List[Entity], bool]): A function to add entities to HA.
-        discovery_info (Optional[Dict[str, Any]]): Optional discovery information. Defaults to None.
+        hass (HomeAssistant): _description_
+        config (Dict[str, Any]): _description_
+        async_add_entities (_type_): _description_
     """
-    if discovery_info is None:
-        _LOGGER.debug("No discovery info available.")
-    url = config[DOMAIN][CONF_URL]
-    rest_data = ConnectionHub(hass, url)
-
-    entities = []
+    config = hass.data[DOMAIN][config_entry.entry_id]
+    url = config[CONF_URL]
+    session = ConnectionHub(hass, url)
+    sensors = []
     for sensor_name, payload_keys in SENSOR_PAYLOAD_KEYS.items():
-        entities.append(ADSBTar1090Sensor(hass, sensor_name, rest_data, payload_keys))
+        sensors.append(ADSBTar1090Sensor(hass, sensor_name, session, payload_keys))
+    async_add_entities(sensors, update_before_add=True)
 
-    if entities:
-        await rest_data.async_update()
-        async_add_entities(entities)
+# async def async_setup_platform(
+#     hass: HomeAssistant,
+#     config: Dict[str, Any],
+#     async_add_entities,
+#     discovery_info: Optional[Dict[str, Any]] = None
+# ) -> None:
+#     """Set up the sensor platform for the custom component.
+#     This function is responsible for setting up the sensor platform within the custom component.
+#     Called when Home Assistant discovers and initializes the sensor platform based on configuration.
+
+#     Args:
+#         hass (HomeAssistant): The Home Assistant core instance.
+#         config (Dict[str, Any]): The configuration for the sensor platform.
+#         async_add_entities (Callable[[List[Entity], bool]): A function to add entities to HA.
+#         discovery_info (Optional[Dict[str, Any]]): Optional discovery information. Defaults to None.
+#     """
+#     if discovery_info is None:
+#         _LOGGER.debug("No discovery info available.")
+#     url = config[DOMAIN][CONF_URL]
+#     rest_data = ConnectionHub(hass, url)
+
+#     entities = []
+#     for sensor_name, payload_keys in SENSOR_PAYLOAD_KEYS.items():
+#         entities.append(ADSBTar1090Sensor(hass, sensor_name, rest_data, payload_keys))
+
+#     if entities:
+#         await rest_data.async_update()
+#         async_add_entities(entities)
 
 
 async def async_update_entities(entities: list):
