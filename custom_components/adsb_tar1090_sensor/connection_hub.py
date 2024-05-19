@@ -5,7 +5,7 @@ import asyncio
 import aiohttp
 from homeassistant.exceptions import HomeAssistantError
 #from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from .flight_data import FlightData
+from .flight_manager import FlightManager
 _LOGGER = logging.getLogger(__name__)
 
 class ConnectionHub:
@@ -50,7 +50,7 @@ class ConnectionHub:
         Args:
             response_data (dict): The response JSON data dictionary.
         """
-        flight_data = FlightData(response_data)
+        flight_data = FlightManager(response_data)
         self._data = flight_data.output_data()
 
     async def async_update(self):

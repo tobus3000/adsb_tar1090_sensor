@@ -1,14 +1,14 @@
 """
-FlightData class to build the Home Assistant Sensor data
-based on the information received from the ADS-B receiver.
+FlightManager class to track all current flights based
+on the information received from the ADS-B receiver.
 
 """
 from __future__ import annotations
 import haversine
 from homeassistant.exceptions import HomeAssistantError
-from .aircraft import Aircraft
+from .flight import Flight
 
-class FlightData:
+class FlightManager:
     """Connection class to verify ADS-B tar1090 API connection."""
 
     def __init__(self, adsb_data: dict) -> None:
@@ -17,8 +17,8 @@ class FlightData:
         Args:
             adsb_data (dict): The `aircraft.json` response data.
         """
+        self.active_flights = {}
         self.message_count = 0
-        self.monitored_flights = 0
         self.alerts = 0
         self.adsb_data = adsb_data
 
@@ -52,21 +52,6 @@ class FlightData:
         self._message_count = count
 
     @property
-    def monitored_flights(self) -> int:
-        """Returns the amount of flights currently monitored by your ADS-B receiver.
-
-        Returns:
-            int: Current amount of flights monitored.
-        """
-        return self._monitored_flights
-
-    @monitored_flights.setter
-    def monitored_flights(self, count: int):
-        if not isinstance(count, int):
-            count = 0
-        self._monitored_flights = count
-
-    @property
     def alerts(self) -> int:
         """Returns the amount of currently tracked alerts.
 
@@ -93,39 +78,59 @@ class FlightData:
             DataParserError: Failed to parse the aircraft data.
         """
         self.message_count = self.adsb_data.get('messages',0)
-        self.extract_aircraft_data()
+        self.extract_flight_data()
 
-    def extract_aircraft_data(self):
+    def extract_flight_data(self):
         """Extract the aircraft data from the ADS-B data.
            Process each flight and update the class property values.
-
-        Returns:
-            bool: _description_
         """
         aircrafts = self.adsb_data.get("aircraft")
         if aircrafts:
-            self.monitored_flights = len(aircrafts)
-            for aircraft_data in aircrafts:
-                data = Aircraft(aircraft_data)
-                if data.emergency:
-                    self.alerts=self.alerts + 1
-                # squawk = aircraft.get("squawk")
-                # # skip record when no SQUAWK code is set.
-                # if not squawk:
-                #     continue
-                # flight = aircraft.get("flight")
-                # # skip record when no flight number is set.
-                # if not flight:
-                #     continue
-                # # get latitude & longitude
-                # lat = aircraft.get("lat")
-                # lon = aircraft.get("lon")
-                # # skip if no location data is present.
-                # if not lat or not lon:
-                #     continue
-
+            for flight_data in aircrafts:
+                flight_number = flight_data.get("flight")
+                if flight_number:
+                    self.add_flight(flight_number.rstrip(), flight_data)
         else:
             raise DataParserError("Failed to parse the aircraft data.")
+
+    def add_flight(self, flight_number: str, flight_data: dict) -> None:
+        """Adds a Flight object to the list of active flights.
+
+        Args:
+            flight_number (str): The flight number, such as 'AFR564' or similar.
+            flight_data (dict): A single item from the list of dicts under
+                                the `aircraft` key inside `aircraft.json`.
+        """
+        flight = Flight(flight_number, flight_data)
+        self.active_flights[flight_number] = flight
+
+    def remove_flight(self, flight_number: str) -> None:
+        """Removes a flight from the list of active flights.
+
+        Args:
+            flight_number (str): The flight number, such as 'AFR564' or similar.
+        """
+        if flight_number in self.active_flights:
+            del self.active_flights[flight_number]
+
+    def get_flight(self, flight_number: str) -> Flight | None:
+        """Get flight by flight number
+
+        Args:
+            flight_number (str): The flight number, such as 'AFR564' or similar.
+
+        Returns:
+            Flight | None: `Flight` object instance or None if no flight has been found.
+        """
+        return self.active_flights.get(flight_number)
+
+    def get_all_flights(self) -> list:
+        """Get all active flights as a list
+
+        Returns:
+            list: All active flights as a list of `Flight` object instances.
+        """
+        return list(self.active_flights.values())
 
     def output_data(self) -> dict:
         """Returns the output data required by the Home Assistant ADS-B Sensor.
@@ -138,7 +143,7 @@ class FlightData:
         """
         return {
             "message_count": self.message_count,
-            "monitored_flights": self.monitored_flights,
+            "monitored_flights": len(self.active_flights),
             "alerts": self.alerts
         }
 

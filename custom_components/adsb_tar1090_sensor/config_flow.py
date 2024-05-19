@@ -104,7 +104,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             # Value of data will be set on the options property of our config_entry
             # instance.
-            _LOGGER.debug("Saving ADS-B tar1090 Sensor options: %s", user_input)
+            _LOGGER.debug("Saving sensor options: %s", user_input)
             return self.async_create_entry(
                 title="ADS-B tar1090 Sensor Options Updated",
                 data=user_input,

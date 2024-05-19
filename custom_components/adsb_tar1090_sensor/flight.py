@@ -6,15 +6,16 @@ based on the information received from the ADS-B receiver.
 from __future__ import annotations
 from .squawk_codes import SQUAWK_CODES
 
-class Aircraft:
+class Flight:
     """Holds details of currently monitored aircraft."""
-    def __init__(self, aircraft_data: dict) -> None:
+    def __init__(self, flight_number, flight_data: dict) -> None:
         """Initialize the Aircraft object.
 
         Args:
-            aircraft_data (dict): A dictionary containing aircraft data.
+            flight_data (dict): A dictionary containing aircraft data.
         """
-        self.data = aircraft_data
+        self.flight_number = flight_number
+        self.data = flight_data
         self.parse_data()
 
     @property
@@ -41,22 +42,6 @@ class Aircraft:
             self._squawk = (code, description)
         else:
             self._squawk = None
-
-    @property
-    def flight_number(self) -> str|None:
-        """Return the flight number of the aircraft, if available."""
-        return self._flight_number
-
-    @flight_number.setter
-    def flight_number(self, number: str|None):
-        """Set the flight number of the aircraft.
-
-        Args:
-            number (str | None): The flight number to set.
-        """
-        if number:
-            number.rstrip()
-        self._flight_number = number
 
     @property
     def speed_mach(self) -> float|None:
