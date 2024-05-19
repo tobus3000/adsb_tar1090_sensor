@@ -50,7 +50,7 @@ class ConnectionHub:
         Args:
             response_data (dict): The response JSON data dictionary.
         """
-        flight_data = FlightManager(response_data)
+        flight_data = FlightManager(self.hass, response_data)
         self._data = flight_data.output_data()
 
     async def async_update(self):

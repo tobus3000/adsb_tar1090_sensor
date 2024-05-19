@@ -5,18 +5,26 @@ on the information received from the ADS-B receiver.
 """
 from __future__ import annotations
 import haversine
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE
+    )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from .flight import Flight
 
 class FlightManager:
     """Connection class to verify ADS-B tar1090 API connection."""
 
-    def __init__(self, adsb_data: dict) -> None:
+    def __init__(self, hass: HomeAssistant, adsb_data: dict) -> None:
         """Initialize the FlightData class.
 
         Args:
+            hass (HomeAssistant): The Home Assistance object instance.
             adsb_data (dict): The `aircraft.json` response data.
         """
+        self.hass = hass
+        self.location = self.get_location()
         self.active_flights = {}
         self.message_count = 0
         self.alerts = 0
@@ -99,7 +107,7 @@ class FlightManager:
         Args:
             flight_number (str): The flight number, such as 'AFR564' or similar.
             flight_data (dict): A single item from the list of dicts under
-                                the `aircraft` key inside `aircraft.json`.
+            the `aircraft` key inside `aircraft.json`.
         """
         flight = Flight(flight_number, flight_data)
         self.active_flights[flight_number] = flight
@@ -162,11 +170,40 @@ class FlightManager:
 
         Returns:
             float: The haversine distance between the two coordinates in kilometers,
-                   rounded to two decimal places.
+            rounded to two decimal places.
         """
         distance_km = haversine.haversine(coord1, coord2)
         return round(distance_km,2)
 
+    async def get_location(self) -> tuple:
+        """Retrieve the latitude and longitude of the Home Assistant installation.
+
+        This function asynchronously fetches the latitude and longitude attributes 
+        of the "sun.sun" entity, which typically represents the location of the 
+        Home Assistant installation.
+
+        Returns:
+            tuple: A tuple containing the latitude and longitude of the Home Assistant 
+            installation. If the location is not available, (None, None) is returned.
+        """
+        states = self.hass.states.async_all()
+        latitude = next(
+            (
+                state.attributes.get(ATTR_LATITUDE)
+                for state in states
+                if state.entity_id == "sun.sun"
+            ),
+            None
+        )
+        longitude = next(
+            (
+                state.attributes.get(ATTR_LONGITUDE)
+                for state in states
+                if state.entity_id == "sun.sun"
+            ),
+            None
+        )
+        return (latitude, longitude)
 
 class DataParserError(HomeAssistantError):
     """Error to indicate that data could not be parsed."""
