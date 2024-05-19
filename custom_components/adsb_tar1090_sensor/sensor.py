@@ -6,6 +6,7 @@ from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from .utils import generate_entity_id
 from .connection_hub import ConnectionHub
 from .const import (
     CONF_URL,
@@ -110,6 +111,7 @@ class ADSBTar1090Sensor(Entity):
         """
         self._hass = hass
         self._name = name
+        self.entity_id = generate_entity_id(DOMAIN, name)
         self._rest_data = rest_data
         self._payload_keys = payload_keys
         self._state = {key: None for key in payload_keys}
