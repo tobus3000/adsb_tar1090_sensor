@@ -26,9 +26,8 @@ class FlightManager:
         self.hass = hass
         self.location = self.get_location()
         self.active_flights = {}
-        self.message_count = 0
-        self.alerts = 0
         self.adsb_data = adsb_data
+        self.distances = {}
 
     @property
     def adsb_data(self) -> dict:
@@ -59,26 +58,6 @@ class FlightManager:
             count = 0
         self._message_count = count
 
-    @property
-    def alerts(self) -> int:
-        """Returns the amount of currently tracked alerts.
-
-        Returns:
-            int: Current alert count
-        """
-        return self._alerts
-
-    @alerts.setter
-    def alerts(self, count: int):
-        """Set the current alert count.
-
-        Args:
-            count (int): The current alert count
-        """
-        if not isinstance(count, int):
-            count = 0
-        self._alerts = count
-
     def parse_adsb_data(self):
         """Parses and processes the local ADS-B data.
 
@@ -87,6 +66,7 @@ class FlightManager:
         """
         self.message_count = self.adsb_data.get('messages',0)
         self.extract_flight_data()
+        self.calculate_distances()
 
     def extract_flight_data(self):
         """Extract the aircraft data from the ADS-B data.
@@ -95,11 +75,21 @@ class FlightManager:
         aircrafts = self.adsb_data.get("aircraft")
         if aircrafts:
             for flight_data in aircrafts:
-                flight_number = flight_data.get("flight")
-                if flight_number:
-                    self.add_flight(flight_number.rstrip(), flight_data)
+                flight_number = flight_data.get("flight", "").rstrip()
+                if flight_number != "":
+                    self.add_flight(flight_number, flight_data)
         else:
             raise DataParserError("Failed to parse the aircraft data.")
+
+    def calculate_distances(self):
+        """Iterates over all current flights and calculates the distance (in km) between
+        the flight and your position.
+        """
+        for flight in self.get_all_flights():
+            if flight.location:
+                distance = FlightManager.haversine_distance(self.location, flight.location)
+                if distance and isinstance(distance, float):
+                    self.distances[flight.flight_number] = distance
 
     def add_flight(self, flight_number: str, flight_data: dict) -> None:
         """Adds a Flight object to the list of active flights.
@@ -152,11 +142,11 @@ class FlightManager:
         return {
             "message_count": self.message_count,
             "monitored_flights": len(self.active_flights),
-            "alerts": self.alerts
+            "nearest_flight": min(self.distances.values())
         }
 
     @staticmethod
-    async def haversine_distance(coord1: tuple, coord2: tuple) -> float:
+    def haversine_distance(coord1: tuple, coord2: tuple) -> float:
         """
         Calculate the haversine distance between two geographic coordinates.
 
@@ -175,7 +165,7 @@ class FlightManager:
         distance_km = haversine.haversine(coord1, coord2)
         return round(distance_km,2)
 
-    async def get_location(self) -> tuple:
+    def get_location(self) -> tuple:
         """Retrieve the latitude and longitude of the Home Assistant installation.
 
         This function asynchronously fetches the latitude and longitude attributes 

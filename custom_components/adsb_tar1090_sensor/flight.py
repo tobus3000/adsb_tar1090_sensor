@@ -44,32 +44,23 @@ class Flight:
             self._squawk = None
 
     @property
-    def speed_mach(self) -> float|None:
-        """Return the speed of the aircraft in Mach, if available."""
-        return self._speed_mach
+    def parameters(self) -> tuple:
+        """Get altitude and speed.
+        This property returns a tuple containing the altitude and speed of the aircraft.
 
-    @speed_mach.setter
-    def speed_mach(self, mach: float|None):
-        """Set the speed of the aircraft in Mach.
+        Returns:
+            tuple: A tuple containing the altitude and speed of the aircraft
+        """
+        return (self._altitude, self._speed)
+
+    @parameters.setter
+    def parameters(self, alt_speed_param: tuple) -> None:
+        """Set the altitude and speed parameters of the aircraft.
 
         Args:
-            mach (float | None): The speed in Mach to set.
+            alt_speed_param (tuple): A tuple containing altitude and speed parameters.
         """
-        self._speed_mach = mach
-
-    @property
-    def altitude(self) -> int|None:
-        """Return the altitude of the aircraft, if available."""
-        return self._altitude
-
-    @altitude.setter
-    def altitude(self, altitude_feet: int|None):
-        """Set the altitude of the aircraft.
-
-        Args:
-            altitude_feet (int | None): The altitude in feet to set.
-        """
-        self._altitude = altitude_feet
+        (self._altitude, self._speed) = alt_speed_param
 
     @property
     def location(self) -> tuple|None:
@@ -77,7 +68,7 @@ class Flight:
 
         Returns:
             tuple|None: A tuple containing the location coordinates (latitude, longitude) 
-                        of the aircraft, or None if the location is not set.
+            of the aircraft, or None if the location is not set.
         """
         return self._location
 
@@ -95,42 +86,27 @@ class Flight:
             self._location = None
 
     @property
-    def alert(self) -> int|None:
-        """Return the alert count of the aircraft, if available."""
-        return self._alert
+    def alert(self) -> tuple:
+        """Return the alert count and emergency message, if available.
+        
+         Returns:
+            tuple: A tuple containing the alert count and and emergency message.
+        """
+        return (self._alert, self._emergency)
 
     @alert.setter
-    def alert(self, alert_count: int|None):
+    def alert(self, alert_emergency: tuple) -> None:
         """Set the alert count of the aircraft.
-
+        
         Args:
-            alert_count (int | None): The alert count to set.
+            alert_emergency (tuple): A tuple containing amount of alerts and an emergency message.
         """
-        self._alert = alert_count
-
-    @property
-    def emergency(self) -> bool:
-        """Return the emergency status of the aircraft."""
-        return self._emergency
-
-    @emergency.setter
-    def emergency(self, emergency_status: str|bool|None):
-        """Set the emergency status of the aircraft.
-
-        Args:
-            emergency_status (str | bool | None): The emergency status to set.
-        """
-        if emergency_status:
-            self._emergency = True
-        else:
-            self._emergency = False
+        (self._alert, self._emergency) = alert_emergency
 
     def parse_data(self):
         """Parses and processes the local ADS-B data."""
         self.squawk = self.data.get("squawk")
         self.flight_number = self.data.get("flight")
-        self.speed_mach = self.data.get("mach")
-        self.altitude = self.data.get("alt_geom")
+        self.parameters = (self.data.get("alt_geom"), self.data.get("mach"))
         self.location = (self.data.get("lat"), self.data.get("lon"))
-        self.alert = self.data.get("alert")
-        self.emergency = self.data.get("emergency")
+        self.alert = (self.data.get("alert"), self.data.get("emergency"))

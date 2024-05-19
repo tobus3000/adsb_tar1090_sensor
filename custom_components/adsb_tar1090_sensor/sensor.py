@@ -14,8 +14,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=5)
 SENSOR_PAYLOAD_KEYS = {
-    'alert': ['squawk', 'distance', 'flight'],
-    'statistics': ['monitored_flights', 'alerts', 'message_count']
+    #'alert': ['squawk', 'distance', 'flight'],
+    'statistics': ['monitored_flights', 'nearest_flight', 'message_count']
 }
 
 async def async_setup_platform(
