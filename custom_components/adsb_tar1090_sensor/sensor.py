@@ -1,6 +1,6 @@
 """The Sensor class and definitions."""
 import logging
-from typing import Any, Dict, List, Optional, Callable
+from typing import Any, Dict, List, Optional
 import asyncio
 from datetime import timedelta
 from homeassistant.helpers.entity import Entity
@@ -21,7 +21,7 @@ SENSOR_PAYLOAD_KEYS = {
 async def async_setup_platform(
     hass: HomeAssistant,
     config: Dict[str, Any],
-    async_add_entities: Callable[[List[Entity]]],
+    async_add_entities,
     discovery_info: Optional[Dict[str, Any]] = None
 ) -> None:
     """Set up the sensor platform for the custom component.
