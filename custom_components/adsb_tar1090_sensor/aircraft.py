@@ -18,36 +18,29 @@ class Aircraft:
         self.parse_data()
 
     @property
-    def squawk(self) -> str|None:
-        """Return the squawk code of the aircraft, if available."""
+    def squawk(self) -> tuple|None:
+        """Return the squawk code of the aircraft and 
+        a squawk code description, if available.
+
+        Returns:
+            tuple|None: First entry is Squawk code, second entry is description.
+        """
         return self._squawk
 
     @squawk.setter
     def squawk(self, code: str|None):
         """Set the squawk code of the aircraft.
+        This creates a tuple where the first item is the squawk code
+        and the second item is the squawk code description.
 
         Args:
             code (str | None): The squawk code to set.
         """
-        self._squawk = code
         if code:
-            self.squawk_description = SQUAWK_CODES.get(code)
+            description = SQUAWK_CODES.get(code)
+            self._squawk = (code, description)
         else:
-            self.squawk_description = None
-
-    @property
-    def squawk_description(self) -> str|None:
-        """Return the description of the squawk code, if available."""
-        return self._squawk_description
-
-    @squawk_description.setter
-    def squawk_description(self, description: str|None):
-        """Set the description of the squawk code.
-
-        Args:
-            description (str | None): The description to set.
-        """
-        self._squawk_description = description
+            self._squawk = None
 
     @property
     def flight_number(self) -> str|None:
@@ -94,32 +87,27 @@ class Aircraft:
         self._altitude = altitude_feet
 
     @property
-    def latitude(self) -> float|None:
-        """Return the latitude of the aircraft, if available."""
-        return self._latitude
+    def location(self) -> tuple|None:
+        """Returns a location tuple for the aircraft.
 
-    @latitude.setter
-    def latitude(self, latitude_degrees: float|None):
-        """Set the latitude of the aircraft.
+        Returns:
+            tuple|None: A tuple containing the location coordinates (latitude, longitude) 
+                        of the aircraft, or None if the location is not set.
+        """
+        return self._location
+
+    @location.setter
+    def location(self, location: tuple) -> None:
+        """Set the location of the aircraft.
+        Takes a tuple of (latitude, longitude).
 
         Args:
-            latitude_degrees (float | None): The latitude in degrees to set.
+            location (tuple): Tuple of (latitude, longitude)
         """
-        self._latitude = latitude_degrees
-
-    @property
-    def longitude(self) -> float|None:
-        """Return the longitude of the aircraft, if available."""
-        return self._longitude
-
-    @longitude.setter
-    def longitude(self, longitude_degrees: float|None):
-        """Set the longitude of the aircraft.
-
-        Args:
-            longitude_degrees (float | None): The longitude in degrees to set.
-        """
-        self._longitude = longitude_degrees
+        if None not in location:
+            self._location = location
+        else:
+            self._location = None
 
     @property
     def alert(self) -> int|None:
@@ -158,7 +146,6 @@ class Aircraft:
         self.flight_number = self.data.get("flight")
         self.speed_mach = self.data.get("mach")
         self.altitude = self.data.get("alt_geom")
-        self.latitude = self.data.get("lat")
-        self.longitude = self.data.get("lon")
+        self.location = (self.data.get("lat"), self.data.get("lon"))
         self.alert = self.data.get("alert")
         self.emergency = self.data.get("emergency")
