@@ -4,7 +4,7 @@ on the information received from the ADS-B receiver.
 
 """
 from __future__ import annotations
-import logger
+import logging
 import haversine
 from homeassistant.const import (
     ATTR_LATITUDE,
