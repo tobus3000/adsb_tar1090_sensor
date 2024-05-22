@@ -25,16 +25,13 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=5)
 SENSOR_PAYLOAD_KEYS = {
-    #'alert': ['squawk', 'distance', 'flight'],
-    'statistics': [
-        'monitored_flights',
-        'nearest_flight',
-        'nearest_flight_distance',
-        'nearest_flight_altitude',
-        'nearest_flight_speed',
-        'message_count',
-        'emergencies'
-    ]
+    "adsb_monitored_flights": ["monitored_flights"],
+    "adsb_nearest_flight": ["nearest_flight"],
+    "adsb_nearest_flight_distance": ["nearest_flight_distance"],
+    "adsb_nearest_flight_altitude": ["nearest_flight_altitude"],
+    "adsb_neares_flight_speed": ["nearest_flight_speed"],
+    "adsb_message_count": ["message_count"],
+    "adsb_emergencies": ["emergencies"]
 }
 
 async def async_setup_entry(
@@ -53,9 +50,9 @@ async def async_setup_entry(
     integration_name = config[CONF_NAME]
     url = config[CONF_URL]
     session = ConnectionHub(hass, url)
-    sensors = []
+    entities = []
     for sensor_name, payload_keys in SENSOR_PAYLOAD_KEYS.items():
-        sensors.append(
+        entities.append(
             ADSBTar1090Sensor(
                 hass,
                 integration_name,
@@ -64,7 +61,8 @@ async def async_setup_entry(
                 payload_keys
             )
         )
-    async_add_entities(sensors, update_before_add=True)
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
 # async def async_setup_platform(
 #     hass: HomeAssistant,
