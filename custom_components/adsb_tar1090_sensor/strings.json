@@ -1,0 +1,14 @@
+{
+    "config": {
+        "title": "ADSB tar1090 Sensor",
+        "step": {
+            "init": {
+                "title": "Specify data source",
+                "data": {
+                    "name": "Name of this sensor",
+                    "url": "The URL to the aircraft.json file"
+                }
+            }
+        }
+    }
+}
