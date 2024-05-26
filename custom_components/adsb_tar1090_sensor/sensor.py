@@ -39,7 +39,8 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities
 ):
-    """Setup sensors from a config entry created in the integration UI.
+    """
+    Setup sensors from a config entry created in the integration UI.
 
     Args:
         hass (HomeAssistant): _description_
@@ -148,7 +149,7 @@ class ADSBTar1090Sensor(SensorEntity):
 
     async def async_update(self):
         """Update the sensor state."""
-        _LOGGER.debug("ADS-B tar1090 Sensor: Updating Sensors.")
+        _LOGGER.debug("ADS-B tar1090 Sensor: Updating Sensor.")
         await self._rest_data.async_update()
         data = self._rest_data.data
         if data:

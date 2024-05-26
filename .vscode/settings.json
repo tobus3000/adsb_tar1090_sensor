@@ -1,3 +1,6 @@
 {
-    "python.analysis.typeCheckingMode": "basic"
+    "python.analysis.typeCheckingMode": "basic",
+    "localcompletion.context_files": [
+        "custom_components/adsb_tar1090_sensor/sensor.py"
+    ]
 }
