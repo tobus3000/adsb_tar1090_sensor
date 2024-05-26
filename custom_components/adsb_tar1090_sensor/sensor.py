@@ -25,13 +25,13 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=5)
 SENSOR_PAYLOAD_KEYS = {
-    "adsb_monitored_flights": ["monitored_flights"],
-    "adsb_nearest_flight": ["nearest_flight"],
-    "adsb_nearest_flight_distance": ["nearest_flight_distance"],
-    "adsb_nearest_flight_altitude": ["nearest_flight_altitude"],
-    "adsb_neares_flight_speed": ["nearest_flight_speed"],
-    "adsb_message_count": ["message_count"],
-    "adsb_emergencies": ["emergencies"]
+    "adsb_monitored_flights": "monitored_flights",
+    "adsb_nearest_flight": "nearest_flight",
+    "adsb_nearest_flight_distance": "nearest_flight_distance",
+    "adsb_nearest_flight_altitude": "nearest_flight_altitude",
+    "adsb_nearest_flight_speed": "nearest_flight_speed",
+    "adsb_message_count": "message_count",
+    "adsb_emergencies": "emergencies"
 }
 
 async def async_setup_entry(
@@ -52,14 +52,14 @@ async def async_setup_entry(
     url = config[CONF_URL]
     session = ConnectionHub(hass, url)
     entities = []
-    for sensor_name, payload_keys in SENSOR_PAYLOAD_KEYS.items():
+    for sensor_name, payload_key in SENSOR_PAYLOAD_KEYS.items():
         entities.append(
             ADSBTar1090Sensor(
                 hass,
                 integration_name,
                 sensor_name,
                 session,
-                payload_keys
+                payload_key
             )
         )
     if entities:
@@ -120,7 +120,7 @@ class ADSBTar1090Sensor(SensorEntity):
         integration_name: str,
         name: str,
         rest_data: ConnectionHub,
-        payload_keys: List[str]
+        payload_key: str
     ) -> None:
         """Initialize the ADS-B sensor.
 
@@ -134,8 +134,14 @@ class ADSBTar1090Sensor(SensorEntity):
         self._name = name
         self._attr_unique_id = generate_entity_id(DOMAIN, integration_name, name)
         self._rest_data = rest_data
-        self._payload_keys = payload_keys
-        self._state = {key: None for key in payload_keys}
+        self._payload_key = payload_key
+        #self._state = {key: None for key in payload_key}
+        self._state = None
+
+    @property
+    def icon(self) -> str | None:
+        """Icon of the entity."""
+        return "mdi:airplane"
 
     @property
     def name(self):
@@ -153,6 +159,6 @@ class ADSBTar1090Sensor(SensorEntity):
         await self._rest_data.async_update()
         data = self._rest_data.data
         if data:
-            for key in self._payload_keys:
-                if key in data:
-                    self._state[key] = data[key]
+            current_value = data.get(self._payload_key)
+            if current_value:
+                self._state = current_value
