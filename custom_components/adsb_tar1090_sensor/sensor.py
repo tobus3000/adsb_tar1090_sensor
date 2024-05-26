@@ -135,7 +135,6 @@ class ADSBTar1090Sensor(SensorEntity):
         self._attr_unique_id = generate_entity_id(DOMAIN, integration_name, name)
         self._rest_data = rest_data
         self._payload_key = payload_key
-        #self._state = {key: None for key in payload_key}
         self._state = None
 
     @property
@@ -148,17 +147,14 @@ class ADSBTar1090Sensor(SensorEntity):
         """Return the name of the sensor."""
         return self._name
 
-    # @property
-    # def state(self):
-    #     """Return the state of the sensor."""
-    #     return self._state
-
     async def async_update(self):
         """Update the sensor state."""
         _LOGGER.debug("ADS-B tar1090 Sensor: Updating Sensor.")
         await self._rest_data.async_update()
         data = self._rest_data.data
+        _LOGGER.debug("Got sensor data: %s", str(data))
         if data:
             current_value = data.get(self._payload_key)
+            _LOGGER.debug("Current Vallue: %s", str(current_value))
             if current_value:
                 self._state = current_value
